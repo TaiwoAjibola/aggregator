@@ -6,21 +6,35 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "ingest": "tsx src/scripts/ingest.ts",
+    "group": "tsx src/scripts/group.ts",
+    "generate:event": "tsx src/scripts/generate-event.ts",
+    "worker": "tsx src/scripts/worker.ts"
   },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "better-sqlite3": "^12.6.2",
     "next": "16.1.4",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "rss-parser": "^3.13.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
+    "prisma": "^7.3.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

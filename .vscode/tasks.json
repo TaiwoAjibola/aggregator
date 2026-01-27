@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Dev: Next.js",
+			"type": "shell",
+			"command": "${env:HOME}/.nvm/versions/node/v20.19.0/bin/node",
+			"args": [
+				"${workspaceFolder}/node_modules/next/dist/bin/next",
+				"dev"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Worker: Ingest hourly",
+			"type": "shell",
+			"command": "${env:HOME}/.nvm/versions/node/v20.19.0/bin/node",
+			"args": [
+				"${workspaceFolder}/node_modules/tsx/dist/cli.mjs",
+				"${workspaceFolder}/src/scripts/worker.ts"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

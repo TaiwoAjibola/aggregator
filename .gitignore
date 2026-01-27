@@ -33,9 +33,20 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Prisma / SQLite
+dev.db
+dev.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# Go module cache (accidentally created in repo)
+/pkg/

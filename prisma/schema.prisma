@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Source {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  rssUrl    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items Item[]
+}
+
+model Item {
+  id          String    @id @default(cuid())
+  sourceId    String
+  source      Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  title       String
+  excerpt     String?
+  url         String?
+  publishedAt DateTime?
+  fetchedAt   DateTime  @default(now())
+  hash        String    @unique
+
+  eventItems EventItem[]
+
+  @@index([sourceId, publishedAt])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startAt   DateTime?
+  endAt     DateTime?
+  itemCount Int      @default(0)
+  key       String?  @unique
+
+  eventItems EventItem[]
+  aiOutputs  EventAiOutput[]
+}
+
+model EventItem {
+  id         String   @id @default(cuid())
+  eventId    String
+  itemId     String
+  similarity Float?
+  createdAt  DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  item  Item  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, itemId])
+  @@index([eventId])
+  @@index([itemId])
+}
+
+model EventAiOutput {
+  id            String   @id @default(cuid())
+  eventId       String
+  model         String
+  promptVersion String
+  outputText    String
+  createdAt     DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+}
