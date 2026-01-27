@@ -130,14 +130,15 @@ export default async function EventsPage({
 }: {
   searchParams?: EventsSearchParams;
 }) {
-  const params = await searchParams;
-  const selectedTopic = (params?.topic ?? "All").trim() || "All";
-  const sort = params?.sort === "oldest" ? "oldest" : "recent";
-  const selectedDate = (params?.date ?? "").trim() || "";
-  const query = (params?.q ?? "").trim();
-  const selectedDay = parseYyyyMmDd(selectedDate);
+  try {
+    const params = await searchParams;
+    const selectedTopic = (params?.topic ?? "All").trim() || "All";
+    const sort = params?.sort === "oldest" ? "oldest" : "recent";
+    const selectedDate = (params?.date ?? "").trim() || "";
+    const query = (params?.q ?? "").trim();
+    const selectedDay = parseYyyyMmDd(selectedDate);
 
-  const events = await db().event.findMany({
+    const events = await db().event.findMany({
     orderBy: { updatedAt: sort === "oldest" ? "asc" : "desc" },
     take: 100,
     include: {
@@ -329,5 +330,25 @@ export default async function EventsPage({
         ) : null}
       </div>
     </div>
-  );
+    </>;
+  } catch (error) {
+    console.error("EventsPage error:", error);
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#0E0E0E]">
+        <div className="mx-auto max-w-2xl px-5 py-12">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm dark:border-red-900/30 dark:bg-red-900/10">
+            <p className="font-semibold text-red-900 dark:text-red-200">Error loading events</p>
+            <p className="mt-2 text-red-800 dark:text-red-300">
+              {error instanceof Error ? error.message : "Unknown error occurred"}
+            </p>
+            {process.env.NODE_ENV === "development" && (
+              <pre className="mt-2 overflow-auto rounded bg-red-100 p-2 text-xs text-red-900 dark:bg-red-900/30 dark:text-red-200">
+                {error instanceof Error ? error.stack : String(error)}
+              </pre>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 }

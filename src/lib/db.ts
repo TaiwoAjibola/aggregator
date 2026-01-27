@@ -6,6 +6,9 @@ const globalForPrisma = globalThis as unknown as {
 
 export function db(): PrismaClient {
   if (!globalForPrisma.prismaSingleton) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL environment variable is not set");
+    }
     globalForPrisma.prismaSingleton = new PrismaClient();
   }
   return globalForPrisma.prismaSingleton;
