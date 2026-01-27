@@ -330,7 +330,7 @@ export default async function EventsPage({
         ) : null}
       </div>
     </div>
-    </>;
+    );
   } catch (error) {
     console.error("EventsPage error:", error);
     return (
