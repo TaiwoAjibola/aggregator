@@ -335,9 +335,10 @@ export async function generateEventSummaryWithOllama(eventId: string) {
       throw new Error("USE_HUGGINGFACE=1 but HF_API_TOKEN is not set");
     }
     try {
+      const hfModel = process.env.HF_MODEL || "google/flan-t5-base";
       outputText = await huggingFaceGenerate(prompt, {
         apiToken: hfToken,
-        model: process.env.HF_MODEL,
+        model: hfModel,
         timeoutMs: envInt("HF_TIMEOUT_MS", 120_000),
       });
     } catch (err) {
