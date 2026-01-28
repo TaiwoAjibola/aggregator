@@ -161,69 +161,71 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       : "This page groups multiple reports about the same event to show how different sources emphasize different aspects.");
 
   return (
-    <div className="grid gap-6">
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-3xl">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{heroTitle}</h1>
-            {heroSummary ? <div className="mt-2 text-sm text-zinc-700">{heroSummary}</div> : null}
+    <div className="grid gap-4 md:gap-6">
+      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-3 md:p-6 shadow-sm">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-3 md:gap-4">
+          <div className="w-full md:max-w-3xl">
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-zinc-900 break-words">{heroTitle}</h1>
+            {heroSummary ? <div className="mt-2 text-xs md:text-sm text-zinc-700 line-clamp-2 md:line-clamp-none">{heroSummary}</div> : null}
 
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-600">
-              <span>{windowLabel}</span>
-              <span>•</span>
-              <span>{limitedCoverage ? "Early coverage" : "Multi-source coverage"}</span>
-              <span>•</span>
-              <span>
+            <div className="mt-3 md:mt-4 flex flex-col xs:flex-row xs:flex-wrap items-start xs:items-center gap-1 xs:gap-2 text-xs text-zinc-600">
+              <span className="break-words">{windowLabel}</span>
+              <span className="hidden xs:inline">•</span>
+              <span className="hidden xs:inline">{limitedCoverage ? "Early coverage" : "Multi-source coverage"}</span>
+              <span className="hidden xs:inline">•</span>
+              <span className="break-words">
                 Sources: {sources.length}
-                {sources.length > 0 ? ` (${sources.slice(0, 3).join(", ")}${sources.length > 3 ? "…" : ""})` : ""}
+                {sources.length > 0 ? ` (${sources.slice(0, 2).join(", ")}${sources.length > 2 ? "…" : ""})` : ""}
               </span>
             </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 w-full md:w-auto">
             <GenerateButton eventId={event.id} />
-            <div className="mt-2 text-xs text-zinc-500">
+            <div className="mt-1 md:mt-2 text-xs text-zinc-500">
               Last refreshed: {lastRefreshedAt ? formatDateTimeShort(lastRefreshedAt) : "Not yet"}
             </div>
           </div>
         </div>
 
-        <div className="mt-4 text-xs text-zinc-500">
+        <div className="mt-3 md:mt-4 text-xs text-zinc-500">
           This page groups multiple reports about the same event to show how different sources emphasize different aspects.
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-3 md:p-6 shadow-sm">
+        <div className="flex flex-col xs:flex-row xs:flex-wrap items-start justify-between gap-2 xs:gap-3">
           <div>
-            <div className="text-sm font-medium text-zinc-900">Summary & source grouping</div>
-            <div className="mt-1 text-xs text-zinc-500">Generated using a local AI model (Ollama) from the same source data.</div>
+            <div className="text-xs md:text-sm font-medium text-zinc-900">Summary & source grouping</div>
+            <div className="mt-1 text-xs text-zinc-500">Generated using AI model from the same source data.</div>
           </div>
-          <div className="text-xs text-zinc-500">Latest update: {formatDateTimeShort(event.aiOutputs[0]?.createdAt ?? new Date())}</div>
+          <div className="text-xs text-zinc-500 whitespace-nowrap">Latest: {formatDateTimeShort(event.aiOutputs[0]?.createdAt ?? new Date())}</div>
         </div>
 
         {latestOutput ? (
-          <div className="mt-4 grid gap-4">
+          <div className="mt-3 md:mt-4 grid gap-3 md:gap-4">
             <div>
               <div className="text-xs font-medium text-zinc-500">Lenses</div>
               {lenses.length > 0 ? (
-                <div className="mt-3 grid gap-3">
+                <div className="mt-2 md:mt-3 grid gap-2 md:gap-3">
                   {lenses.map((g) => (
-                    <div key={g.lens} className="rounded-xl border border-zinc-200 bg-white p-4">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <div key={g.lens} className="rounded-lg md:rounded-xl border border-zinc-200 bg-white p-2 md:p-4">
+                      <div className="flex flex-wrap items-center gap-1 md:gap-2">
                         <span
                           className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${lensBadgeTone(
                             g.lens,
                           )}`}
                         >
-                          {g.lens}
+                          <span className="hidden sm:inline">{g.lens}</span>
+                          <span className="sm:hidden">{g.lens.split(" ")[0]}</span>
                         </span>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-2 md:mt-3 flex flex-wrap gap-1 md:gap-2">
                         {g.sources.map((s) => (
                           <span
                             key={s}
-                            className="rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-xs text-zinc-700"
+                            className="rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-xs text-zinc-700 truncate"
+                            title={s}
                           >
                             {s}
                           </span>
@@ -233,12 +235,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   ))}
                 </div>
               ) : (
-                <div className="mt-2 text-sm text-zinc-700">No lens grouping available yet.</div>
+                <div className="mt-2 text-xs md:text-sm text-zinc-700">No lens grouping available yet.</div>
               )}
             </div>
             <div>
               <div className="text-xs font-medium text-zinc-500">Explanation</div>
-              <div className="mt-1 text-sm text-zinc-700">{explanationText}</div>
+              <div className="mt-1 text-xs md:text-sm text-zinc-700">{explanationText}</div>
             </div>
             {limitedCoverage ? (
               <div>

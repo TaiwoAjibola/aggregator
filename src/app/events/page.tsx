@@ -237,11 +237,11 @@ export default async function EventsPage({
     });
 
   return (
-    <div className="grid gap-8">
+    <div className="grid gap-6 md:gap-8">
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">Events</h1>
-          <p className="max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">Events</h1>
+          <p className="max-w-2xl text-xs md:text-sm text-zinc-600 dark:text-zinc-400">
             Grouped clusters of similar headlines (48-hour window).
           </p>
         </div>
@@ -249,35 +249,35 @@ export default async function EventsPage({
         <EventsFilters topics={topicsForChips} selectedTopic={selectedTopic} sort={sort} date={selectedDate} q={query} />
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3 md:gap-4">
         {filteredRows.map((r) => {
           return (
             <Link
               key={r.id}
               href={`/events/${r.id}`}
-              className="group relative cursor-pointer rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/20 dark:hover:bg-white/[0.06]"
+              className="group relative cursor-pointer rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-3 md:p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/20 dark:hover:bg-white/[0.06]"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-50">
+              <div className="flex flex-col md:flex-row items-start justify-between gap-2 md:gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="text-base md:text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-50 line-clamp-2 md:line-clamp-none">
                     {r.title}
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-1 md:gap-2">
                   {r.hasAi ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
+                    <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
                       <span className="text-emerald-700 dark:text-emerald-200">●</span>
                       AI summary ready
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
+                    <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
                       <span className="text-amber-700 dark:text-amber-200">●</span>
                       Needs AI
                     </span>
                   )}
                   {r.limitedCoverage ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-500/15 dark:text-sky-200">
+                    <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-500/15 dark:text-sky-200">
                       <span className="text-sky-700 dark:text-sky-200">●</span>
                       Limited coverage
                     </span>
@@ -286,26 +286,26 @@ export default async function EventsPage({
               </div>
 
               {r.summary ? (
-                <div className="mt-3 max-w-4xl text-[13px] leading-relaxed text-zinc-700 line-clamp-2 dark:text-zinc-300">
+                <div className="mt-2 md:mt-3 max-w-4xl text-xs md:text-[13px] leading-relaxed text-zinc-700 line-clamp-2 dark:text-zinc-300">
                   {r.summary}
                 </div>
               ) : null}
 
               {r.limitedCoverage ? (
-                <div className="mt-3 text-xs text-zinc-600 dark:text-zinc-400">{r.coverageNote}</div>
+                <div className="mt-2 md:mt-3 text-xs text-zinc-600 dark:text-zinc-400">{r.coverageNote}</div>
               ) : null}
 
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+              <div className="mt-3 md:mt-4 flex flex-wrap items-center gap-1 md:gap-2 text-xs text-zinc-600 dark:text-zinc-400">
                 <span className="tabular-nums">{r.itemsCount} report{r.itemsCount === 1 ? "" : "s"}</span>
-                <span>•</span>
-                <span className="tabular-nums">{r.sourcesCount} source{r.sourcesCount === 1 ? "" : "s"}</span>
-                <span>•</span>
-                <span>{formatDateRange(r.start, r.end)}</span>
+                <span className="hidden xs:inline">•</span>
+                <span className="tabular-nums hidden xs:inline">{r.sourcesCount} source{r.sourcesCount === 1 ? "" : "s"}</span>
+                <span className="hidden xs:inline">•</span>
+                <span className="hidden xs:inline">{formatDateRange(r.start, r.end)}</span>
               </div>
 
               {r.sources.length > 0 ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {r.sources.slice(0, 10).map((s) => (
+                <div className="mt-3 md:mt-4 flex flex-wrap gap-1 md:gap-2">
+                  {r.sources.slice(0, 5).map((s) => (
                     <span
                       key={s}
                       className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:border-white/20 dark:hover:bg-white/10"

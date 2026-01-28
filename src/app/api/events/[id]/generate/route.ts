@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { NextRequest, NextResponse } from "next/server";
 
 import { generateEventSummaryWithOllama } from "@/lib/events";
