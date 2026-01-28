@@ -86,11 +86,4 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
     clearTimeout(timeout);
     throw err;
   }
-
-    // Remove the prompt from the response (HF returns prompt + generated text)
-    return generated.replace(prompt, "").trim();
-  } catch (err) {
-    clearTimeout(timeout);
-    throw err;
-  }
 }
