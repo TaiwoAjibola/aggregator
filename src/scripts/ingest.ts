@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { FEEDS } from "@/config/feeds";
 import { db } from "@/lib/db";
 import { ingestFeed } from "@/lib/ingest";

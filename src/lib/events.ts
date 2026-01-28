@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { buildNeutralAggregationPrompt, PROMPT_VERSION } from "@/lib/prompt";
 import { ollamaGenerate } from "@/lib/ollama";
+import { huggingFaceGenerate } from "@/lib/huggingface";
 
 const DEFAULT_COVERAGE_NOTE =
   "This event is currently reported by a limited number of sources. Coverage may expand as more reports emerge.";
@@ -325,17 +326,44 @@ export async function generateEventSummaryWithOllama(eventId: string) {
 
   const prompt = buildNeutralAggregationPrompt(inputItems);
 
-  let outputText = await ollamaGenerate(prompt, {
-    baseUrl,
-    model,
-    timeoutMs: envInt("OLLAMA_TIMEOUT_MS", 60_000),
-    options: {
-      num_ctx: envInt("OLLAMA_NUM_CTX", 1024),
-      num_predict: envInt("OLLAMA_NUM_PREDICT", 350),
-      temperature: envFloat("OLLAMA_TEMPERATURE", 0.2),
-      top_p: envFloat("OLLAMA_TOP_P", 0.9),
-    },
-  });
+  let outputText: string;
+  const useHuggingFace = process.env.USE_HUGGINGFACE === "1";
+
+  if (useHuggingFace) {
+    const hfToken = process.env.HF_API_TOKEN;
+    if (!hfToken) {
+      throw new Error("USE_HUGGINGFACE=1 but HF_API_TOKEN is not set");
+    }
+    try {
+      outputText = await huggingFaceGenerate(prompt, {
+        apiToken: hfToken,
+        model: process.env.HF_MODEL,
+        timeoutMs: envInt("HF_TIMEOUT_MS", 120_000),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Failed to generate AI summary with Hugging Face. Details: ${msg}`);
+    }
+  } else {
+    try {
+      outputText = await ollamaGenerate(prompt, {
+        baseUrl,
+        model,
+        timeoutMs: envInt("OLLAMA_TIMEOUT_MS", 60_000),
+        options: {
+          num_ctx: envInt("OLLAMA_NUM_CTX", 1024),
+          num_predict: envInt("OLLAMA_NUM_PREDICT", 350),
+          temperature: envFloat("OLLAMA_TEMPERATURE", 0.2),
+          top_p: envFloat("OLLAMA_TOP_P", 0.9),
+        },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `Failed to generate AI summary. Ensure Ollama is running at ${baseUrl} with model "${model}". Details: ${msg}`,
+      );
+    }
+  }
 
   outputText = normalizeLensesSection(
     outputText,

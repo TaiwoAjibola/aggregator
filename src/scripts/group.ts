@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { groupRecentItemsIntoEvents } from "@/lib/grouping";
 
 function envInt(name: string, fallback: number): number {

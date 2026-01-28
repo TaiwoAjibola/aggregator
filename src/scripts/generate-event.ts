@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { generateEventSummaryWithOllama } from "@/lib/events";
 
 async function main() {

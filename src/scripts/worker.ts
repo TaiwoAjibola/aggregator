@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { FEEDS } from "@/config/feeds";
 import { ingestFeed } from "@/lib/ingest";
 import { groupRecentItemsIntoEvents } from "@/lib/grouping";
