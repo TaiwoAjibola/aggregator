@@ -1,4 +1,4 @@
-const DEFAULT_MODEL = "mistralai/Mistral-7B-Instruct-v0.1";
+const DEFAULT_MODEL = "google/flan-t5-base";
 
 export type HuggingFaceConfig = {
   apiToken: string;
@@ -26,7 +26,7 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`https://router.huggingface.co/models/${model}`, {
+    const res = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiToken}`,
@@ -36,9 +36,8 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          max_new_tokens: 512,
-          temperature: 0.2,
-          top_p: 0.9,
+          max_length: 512,
+          min_length: 50,
         },
       }),
     });
@@ -47,6 +46,16 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      if (res.status === 404) {
+        throw new Error(
+          `Model "${model}" not found or not deployed. Ensure your HF_API_TOKEN is correct and has API access.`,
+        );
+      }
+      if (res.status === 503) {
+        throw new Error(
+          "Model is loading or temporarily unavailable. Hugging Face servers are busy. Try again in a few seconds.",
+        );
+      }
       throw new Error(
         `Hugging Face request failed: ${res.status} ${res.statusText}${text ? ` - ${text}` : ""}`,
       );
@@ -54,15 +63,29 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
 
     const json = await res.json();
 
-    // HF returns an array with a single object containing generated_text
-    if (!Array.isArray(json) || json.length === 0) {
+    // HF returns an array with summary_text for summarization tasks
+    let result: string;
+    
+    if (Array.isArray(json) && json.length > 0) {
+      // Generated text format
+      result = json[0]?.generated_text || json[0]?.summary_text || "";
+    } else if (typeof json === "object" && json !== null) {
+      // Direct response format
+      result = json.generated_text || json.summary_text || "";
+    } else {
       throw new Error("Unexpected Hugging Face response format");
     }
 
-    const generated = json[0]?.generated_text;
-    if (!generated) {
+    if (!result || typeof result !== "string") {
       throw new Error("No generated text in Hugging Face response");
     }
+
+    // Remove the prompt from the response if it's included
+    return result.replace(prompt, "").trim();
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
 
     // Remove the prompt from the response (HF returns prompt + generated text)
     return generated.replace(prompt, "").trim();
