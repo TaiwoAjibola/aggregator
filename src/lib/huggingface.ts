@@ -26,7 +26,7 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+    const res = await fetch(`https://router.huggingface.co/models/${model}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiToken}`,
@@ -39,6 +39,7 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
           max_length: 512,
           min_length: 50,
         },
+        wait_for_model: true,
       }),
     });
 
