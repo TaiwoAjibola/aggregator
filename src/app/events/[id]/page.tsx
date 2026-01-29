@@ -82,29 +82,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         </div>
       </section>
 
-      {/* Summary Section (if AI available) */}
-      {latestOutput && (
-        <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">AI Summary</h2>
-          
-          {aiSummary && (
-            <div className="mt-4 space-y-3">
-              <div>
-                <div className="text-xs font-medium text-zinc-500 uppercase">Summary</div>
-                <p className="mt-2 text-sm text-zinc-700 leading-relaxed">{aiSummary}</p>
-              </div>
-            </div>
-          )}
-          
-          {aiExplanation && (
-            <div className="mt-4 pt-4 border-t border-zinc-200">
-              <div className="text-xs font-medium text-zinc-500 uppercase">Context</div>
-              <p className="mt-2 text-sm text-zinc-700">{aiExplanation}</p>
-            </div>
-          )}
-        </section>
-      )}
-
       {/* Sources Section */}
       <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
         <h2 className="text-lg font-semibold text-zinc-900">Coverage by Source ({event.eventItems.length} articles)</h2>
