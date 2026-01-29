@@ -23,6 +23,20 @@ function formatDateTimeShort(value: Date): string {
   }).format(value);
 }
 
+function formatReadableSummary(text: string, maxChars: number = 1500): string {
+  // Truncate at sentence boundary for better readability
+  let truncated = text.slice(0, maxChars);
+  const lastPeriod = truncated.lastIndexOf(".");
+  const lastQuestion = truncated.lastIndexOf("?");
+  const lastEnd = Math.max(lastPeriod, lastQuestion);
+  
+  if (lastEnd > maxChars * 0.7) {
+    truncated = truncated.slice(0, lastEnd + 1);
+  }
+  
+  return truncated;
+}
+
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const event = await getEventWithItems(id);
@@ -49,22 +63,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   const heroTitle = event.eventItems[0]?.item.title ?? "Event";
   const heroSummary = event.eventItems[0]?.item.excerpt ?? "";
+  const heroUrl = event.eventItems[0]?.item.url ?? "";
   
   // Combine body content from top 3 articles for substantial header information
-  const substantialBody = event.eventItems
+  const combinedBody = event.eventItems
     .slice(0, 3)
     .map((ei) => ei.item.body || ei.item.excerpt)
     .filter(Boolean)
-    .join(" ")
-    .slice(0, 600);
+    .join(" ");
+  
+  const substantialBody = formatReadableSummary(combinedBody, 1500);
 
   return (
     <div className="grid gap-4 md:gap-6">
-      {/*substantialBody && (
-          <p className="mt-3 text-sm md:text-base text-zinc-700 leading-relaxed max-w-3xl">{substantialBody}</p>
-        )}
-        
-        {!substantialBody &&  Header Section */}
+      {/* Header Section */}
       <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
         <Link href="/events" className="mb-4 inline-flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-900">
           ← Back to events
@@ -72,6 +84,24 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 break-words mt-2">{heroTitle}</h1>
         
+        {(substantialBody || heroSummary) && (
+          <div className="mt-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 md:p-5 border border-blue-200">
+            <p className="text-sm md:text-base text-zinc-800 leading-relaxed whitespace-pre-wrap">
+              {substantialBody || heroSummary}
+            </p>
+            {heroUrl && (
+              <a
+                href={heroUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-900 hover:underline transition"
+              >
+                Read full report
+                <span className="text-base">→</span>
+              </a>
+            )}
+          </div>
+        )}
         {heroSummary && (
           <p className="mt-3 text-sm md:text-base text-zinc-700 leading-relaxed max-w-3xl">{heroSummary}</p>
         )}

@@ -46,7 +46,7 @@ function pickBody(item: Parser.Item): string | undefined {
     item.contentSnippet ??
     (typeof item.summary === "string" ? item.summary : undefined);
   if (!raw) return undefined;
-  const maxChars = envInt("RSS_BODY_MAX_CHARS", 1200);
+  const maxChars = envInt("RSS_BODY_MAX_CHARS", 2500);
   const cleaned = raw
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
