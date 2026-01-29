@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { GenerateButton } from "@/components/GenerateButton";
 import { getEventWithItems } from "@/lib/events";
 
 export const runtime = "nodejs";
@@ -49,78 +48,6 @@ function parseSingleLineField(
   return null;
 }
 
-function parseBlock(outputText: string, header: "Lenses"): string | null {
-  const lines = outputText.split(/\r?\n/);
-  const start = lines.findIndex((l) => l.trim() === `${header}:`);
-  if (start === -1) return null;
-
-  const headerRe = /^(Event Title|Event Summary|Lenses|Explanation|Coverage Note):\s*/;
-  let end = lines.length;
-  for (let i = start + 1; i < lines.length; i += 1) {
-    if (headerRe.test(lines[i])) {
-      end = i;
-      break;
-    }
-  }
-
-  const block = lines
-    .slice(start + 1, end)
-    .join("\n")
-    .trim();
-  return block || null;
-}
-
-type LensGroup = {
-  lens: string;
-  sources: string[];
-};
-
-function parseLensesBlock(lensesBlock: string | null): LensGroup[] {
-  if (!lensesBlock) return [];
-  const lines = lensesBlock.split(/\r?\n/);
-  const groups: LensGroup[] = [];
-  let current: LensGroup | null = null;
-
-  for (const rawLine of lines) {
-    const line = rawLine.replace(/\s+$/g, "");
-    if (!line.trim()) continue;
-
-    const headerMatch = line.match(/^\-\s+(.+):\s*$/);
-    if (headerMatch) {
-      if (current) groups.push(current);
-      current = { lens: headerMatch[1].trim(), sources: [] };
-      continue;
-    }
-
-    const sourceMatch = line.match(/^\s{2,}\-\s+(.+)$/);
-    if (sourceMatch && current) {
-      const source = sourceMatch[1].trim();
-      if (!source) continue;
-      current.sources.push(source);
-    }
-  }
-
-  if (current) groups.push(current);
-  return groups.filter((g) => g.lens && g.sources.length > 0);
-}
-
-function lensBadgeTone(lens: string): string {
-  switch (lens) {
-    case "Policy / Official Statements":
-      return "border-sky-200 bg-sky-50 text-sky-900";
-    case "Economic Impact":
-      return "border-amber-200 bg-amber-50 text-amber-900";
-    case "Public Reaction / Social Impact":
-      return "border-violet-200 bg-violet-50 text-violet-900";
-    case "Investigative / Accountability Focus":
-      return "border-rose-200 bg-rose-50 text-rose-900";
-    case "Regional or Community Focus":
-      return "border-emerald-200 bg-emerald-50 text-emerald-900";
-    default:
-      return "border-zinc-200 bg-zinc-50 text-zinc-900";
-  }
-}
-
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const event = await getEventWithItems(id);
@@ -162,125 +89,84 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="grid gap-4 md:gap-6">
-      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-3 md:p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-3 md:gap-4">
-          <div className="w-full md:max-w-3xl">
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-zinc-900 break-words">{heroTitle}</h1>
-            {heroSummary ? <div className="mt-2 text-xs md:text-sm text-zinc-700 line-clamp-2 md:line-clamp-none">{heroSummary}</div> : null}
-
-            <div className="mt-3 md:mt-4 flex flex-col xs:flex-row xs:flex-wrap items-start xs:items-center gap-1 xs:gap-2 text-xs text-zinc-600">
-              <span className="break-words">{windowLabel}</span>
-              <span className="hidden xs:inline">•</span>
-              <span className="hidden xs:inline">{limitedCoverage ? "Early coverage" : "Multi-source coverage"}</span>
-              <span className="hidden xs:inline">•</span>
-              <span className="break-words">
-                Sources: {sources.length}
-                {sources.length > 0 ? ` (${sources.slice(0, 2).join(", ")}${sources.length > 2 ? "…" : ""})` : ""}
-              </span>
-            </div>
-          </div>
-
-          <div className="shrink-0 w-full md:w-auto">
-            <GenerateButton eventId={event.id} />
-            <div className="mt-1 md:mt-2 text-xs text-zinc-500">
-              Last refreshed: {lastRefreshedAt ? formatDateTimeShort(lastRefreshedAt) : "Not yet"}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-3 md:mt-4 text-xs text-zinc-500">
-          This page groups multiple reports about the same event to show how different sources emphasize different aspects.
-        </div>
-      </section>
-
-      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-3 md:p-6 shadow-sm">
-        <div className="flex flex-col xs:flex-row xs:flex-wrap items-start justify-between gap-2 xs:gap-3">
-          <div>
-            <div className="text-xs md:text-sm font-medium text-zinc-900">Summary & source grouping</div>
-            <div className="mt-1 text-xs text-zinc-500">Generated using AI model from the same source data.</div>
-          </div>
-          <div className="text-xs text-zinc-500 whitespace-nowrap">Latest: {formatDateTimeShort(event.aiOutputs[0]?.createdAt ?? new Date())}</div>
-        </div>
-
-        {latestOutput ? (
-          <div className="mt-3 md:mt-4 grid gap-3 md:gap-4">
-            <div>
-              <div className="text-xs font-medium text-zinc-500">Lenses</div>
-              {lenses.length > 0 ? (
-                <div className="mt-2 md:mt-3 grid gap-2 md:gap-3">
-                  {lenses.map((g) => (
-                    <div key={g.lens} className="rounded-lg md:rounded-xl border border-zinc-200 bg-white p-2 md:p-4">
-                      <div className="flex flex-wrap items-center gap-1 md:gap-2">
-                        <span
-                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${lensBadgeTone(
-                            g.lens,
-                          )}`}
-                        >
-                          <span className="hidden sm:inline">{g.lens}</span>
-                          <span className="sm:hidden">{g.lens.split(" ")[0]}</span>
-                        </span>
-                      </div>
-                      <div className="mt-2 md:mt-3 flex flex-wrap gap-1 md:gap-2">
-                        {g.sources.map((s) => (
-                          <span
-                            key={s}
-                            className="rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-xs text-zinc-700 truncate"
-                            title={s}
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="mt-2 text-xs md:text-sm text-zinc-700">No lens grouping available yet.</div>
-              )}
-            </div>
-            <div>
-              <div className="text-xs font-medium text-zinc-500">Explanation</div>
-              <div className="mt-1 text-xs md:text-sm text-zinc-700">{explanationText}</div>
-            </div>
-            {limitedCoverage ? (
-              <div>
-                <div className="text-xs font-medium text-zinc-500">Coverage Note</div>
-                <div className="mt-1 text-sm text-zinc-700">
-                  {aiCoverage ??
-                    "This event is currently reported by a limited number of sources. Coverage may expand as more reports emerge."}
-                </div>
-              </div>
-            ) : null}
-            <details>
-              <summary className="cursor-pointer text-xs font-medium text-zinc-600">Raw model output</summary>
-              <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-zinc-50 p-4 text-sm text-zinc-900">{latestOutput}</pre>
-            </details>
-          </div>
-        ) : (
-          <div className="mt-4 text-sm text-zinc-600">No AI output yet. Click "Refresh overview" to generate.</div>
+      {/* Header Section */}
+      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
+        <Link href="/events" className="mb-4 inline-flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-900">
+          ← Back to events
+        </Link>
+        
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 break-words mt-2">{heroTitle}</h1>
+        
+        {heroSummary && (
+          <p className="mt-3 text-sm md:text-base text-zinc-700 leading-relaxed max-w-3xl">{heroSummary}</p>
         )}
+        
+        <div className="mt-4 flex flex-col xs:flex-row xs:flex-wrap items-start xs:items-center gap-2 xs:gap-3 text-xs text-zinc-600">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1">
+            <span className="text-zinc-500">📅</span>
+            {windowLabel}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1">
+            <span className="text-zinc-500">📰</span>
+            {sources.length} source{sources.length !== 1 ? "s" : ""}
+          </span>
+          {limitedCoverage && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-amber-800">
+              <span>⚠</span>
+              Early coverage
+            </span>
+          )}
+        </div>
       </section>
 
-      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-3 md:p-6 shadow-sm">
-        <div>
-          <div className="text-xs md:text-sm font-medium text-zinc-900">Grouped headlines ({event.eventItems.length})</div>
-          <div className="mt-1 text-xs text-zinc-500">Raw headlines from all sources in this event</div>
-        </div>
+      {/* Summary Section (if AI available) */}
+      {latestOutput && (
+        <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">AI Summary</h2>
+          
+          {aiSummary && (
+            <div className="mt-4 space-y-3">
+              <div>
+                <div className="text-xs font-medium text-zinc-500 uppercase">Summary</div>
+                <p className="mt-2 text-sm text-zinc-700 leading-relaxed">{aiSummary}</p>
+              </div>
+            </div>
+          )}
+          
+          {aiExplanation && (
+            <div className="mt-4 pt-4 border-t border-zinc-200">
+              <div className="text-xs font-medium text-zinc-500 uppercase">Context</div>
+              <p className="mt-2 text-sm text-zinc-700">{aiExplanation}</p>
+            </div>
+          )}
+        </section>
+      )}
 
-        <div className="mt-3 md:mt-4 grid gap-3">
-          {event.eventItems.map((ei, idx) => (
-            <div key={ei.id} className="rounded-lg border border-zinc-200 bg-white p-3">
-              <div className="flex items-start justify-between gap-2">
+      {/* Sources Section */}
+      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
+        <h2 className="text-lg font-semibold text-zinc-900">Coverage by Source ({event.eventItems.length} articles)</h2>
+        
+        <div className="mt-4 grid gap-3 md:gap-4">
+          {event.eventItems.map((ei) => (
+            <div key={ei.id} className="border border-zinc-200 rounded-lg p-3 md:p-4 hover:border-zinc-300 transition">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-zinc-900">{ei.item.title}</div>
-                  <div className="mt-1 text-xs text-zinc-600">{ei.item.excerpt}</div>
+                  <h3 className="font-medium text-sm md:text-base text-zinc-900 break-words line-clamp-2 md:line-clamp-none">
+                    {ei.item.title}
+                  </h3>
+                  {ei.item.excerpt && (
+                    <p className="mt-2 text-xs md:text-sm text-zinc-600 line-clamp-2 md:line-clamp-none">
+                      {ei.item.excerpt}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-700">
+              
+              <div className="mt-3 flex items-center justify-between gap-2 text-xs">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700">
                   {ei.item.source.name}
                 </span>
-                <span className="text-xs text-zinc-500">
+                <span className="text-zinc-500 whitespace-nowrap">
                   {formatDateTimeShort(ei.item.publishedAt ?? ei.item.fetchedAt)}
                 </span>
               </div>
@@ -288,6 +174,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           ))}
         </div>
       </section>
+
+      {/* Sources List */}
+      {sources.length > 0 && (
+        <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">All Sources in This Event</h2>
+          
+          <div className="mt-4 flex flex-wrap gap-2">
+            {sources.map((source) => (
+              <span
+                key={source}
+                className="inline-flex items-center gap-1.5 rounded-full border border-zinc-300 bg-zinc-50 px-3 py-1.5 text-sm text-zinc-700 font-medium"
+              >
+                <span className="text-base">🔗</span>
+                {source}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="text-sm font-medium text-zinc-900">Original items</div>
