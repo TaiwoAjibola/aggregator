@@ -341,9 +341,29 @@ export async function generateEventSummaryWithOllama(eventId: string) {
         model: hfModel,
         timeoutMs: envInt("HF_TIMEOUT_MS", 120_000),
       });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Failed to generate AI summary with Hugging Face. Details: ${msg}`);
+    } catch (hfErr) {
+      const hfMsg = hfErr instanceof Error ? hfErr.message : String(hfErr);
+      console.warn(`HF failed: ${hfMsg}. Falling back to Ollama...`);
+      
+      // Fallback to Ollama if HF fails
+      try {
+        outputText = await ollamaGenerate(prompt, {
+          baseUrl,
+          model,
+          timeoutMs: envInt("OLLAMA_TIMEOUT_MS", 60_000),
+          options: {
+            num_ctx: envInt("OLLAMA_NUM_CTX", 1024),
+            num_predict: envInt("OLLAMA_NUM_PREDICT", 350),
+            temperature: envFloat("OLLAMA_TEMPERATURE", 0.2),
+            top_p: envFloat("OLLAMA_TOP_P", 0.9),
+          },
+        });
+      } catch (ollamaErr) {
+        const ollamaMsg = ollamaErr instanceof Error ? ollamaErr.message : String(ollamaErr);
+        throw new Error(
+          `Both Hugging Face and Ollama failed. HF: ${hfMsg} | Ollama: ${ollamaMsg}`,
+        );
+      }
     }
   } else {
     try {

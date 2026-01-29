@@ -13,6 +13,8 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
     return NextResponse.json({ ok: true, outputId: saved.id });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    console.error(`AI generation failed for event ${id}: ${message}`);
+    // Return 200 with error message instead of 500 so UI can show it gracefully
+    return NextResponse.json({ ok: false, error: message }, { status: 200 });
   }
 }

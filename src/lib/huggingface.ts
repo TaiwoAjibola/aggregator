@@ -26,7 +26,8 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`https://router.huggingface.co/models/${model}`, {
+    // Use the serverless inference endpoint
+    const res = await fetch("https://api-inference.huggingface.co/models/google/flan-t5-base", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiToken}`,
@@ -35,10 +36,6 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
       signal: controller.signal,
       body: JSON.stringify({
         inputs: prompt,
-        parameters: {
-          max_length: 512,
-          min_length: 50,
-        },
         wait_for_model: true,
       }),
     });
@@ -49,7 +46,7 @@ export async function huggingFaceGenerate(prompt: string, config: HuggingFaceCon
       const text = await res.text().catch(() => "");
       if (res.status === 404) {
         throw new Error(
-          `Model "${model}" not found or not deployed. Ensure your HF_API_TOKEN is correct and has API access.`,
+          `Model "google/flan-t5-base" not found. Your HF_API_TOKEN may not have API access or the service is unavailable.`,
         );
       }
       if (res.status === 503) {

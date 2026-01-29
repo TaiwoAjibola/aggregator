@@ -257,8 +257,36 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </details>
           </div>
         ) : (
-          <div className="mt-4 text-sm text-zinc-600">No AI output yet. Click “Generate AI summary”.</div>
+          <div className="mt-4 text-sm text-zinc-600">No AI output yet. Click "Refresh overview" to generate.</div>
         )}
+      </section>
+
+      <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-3 md:p-6 shadow-sm">
+        <div>
+          <div className="text-xs md:text-sm font-medium text-zinc-900">Grouped headlines ({event.eventItems.length})</div>
+          <div className="mt-1 text-xs text-zinc-500">Raw headlines from all sources in this event</div>
+        </div>
+
+        <div className="mt-3 md:mt-4 grid gap-3">
+          {event.eventItems.map((ei, idx) => (
+            <div key={ei.id} className="rounded-lg border border-zinc-200 bg-white p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm text-zinc-900">{ei.item.title}</div>
+                  <div className="mt-1 text-xs text-zinc-600">{ei.item.excerpt}</div>
+                </div>
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-700">
+                  {ei.item.source.name}
+                </span>
+                <span className="text-xs text-zinc-500">
+                  {formatDateTimeShort(ei.item.publishedAt ?? ei.item.fetchedAt)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">

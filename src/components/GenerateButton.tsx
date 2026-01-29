@@ -16,8 +16,16 @@ export function GenerateButton({ eventId }: Props) {
     try {
       const res = await fetch(`/api/events/${eventId}/generate`, { method: "POST" });
       const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error ?? `Request failed: ${res.status}`);
-      window.location.reload();
+      
+      // Handle both success and error gracefully
+      if (json?.ok === false) {
+        setError(json?.error ?? "AI generation unavailable");
+      } else if (!res.ok) {
+        throw new Error(json?.error ?? `Request failed: ${res.status}`);
+      } else {
+        // Success - reload to show new summary
+        window.location.reload();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
