@@ -23,31 +23,6 @@ function formatDateTimeShort(value: Date): string {
   }).format(value);
 }
 
-function parseSingleLineField(
-  outputText: string,
-  field: "Event Title" | "Event Summary" | "Explanation" | "Coverage Note",
-): string | null {
-  const lines = outputText.split(/\r?\n/);
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    const m = line.match(new RegExp(String.raw`^${field}:\s*(.*)$`));
-    if (!m) continue;
-    const inline = (m[1] ?? "").trim();
-    if (inline) return inline;
-
-    for (let j = i + 1; j < lines.length; j += 1) {
-      const next = lines[j].trim();
-      if (!next) continue;
-      if (/^(Event Title|Event Summary|Lenses|Explanation|Coverage Note):\s*/.test(next)) return null;
-      return next;
-    }
-    return null;
-  }
-
-  return null;
-}
-
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const event = await getEventWithItems(id);
@@ -72,20 +47,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       ? `Coverage window: ${formatDateShort(windowStart)}`
       : `Coverage window: ${formatDateShort(windowStart)} – ${formatDateShort(windowEnd)}`;
 
-  const aiTitle = latestOutput ? parseSingleLineField(latestOutput, "Event Title") : null;
-  const aiSummary = latestOutput ? parseSingleLineField(latestOutput, "Event Summary") : null;
-  const aiExplanation = latestOutput ? parseSingleLineField(latestOutput, "Explanation") : null;
-  const aiCoverage = latestOutput ? parseSingleLineField(latestOutput, "Coverage Note") : null;
-  const aiLenses = latestOutput ? parseBlock(latestOutput, "Lenses") : null;
-
-  const heroTitle = aiTitle ?? event.eventItems[0]?.item.title ?? "Event";
-  const heroSummary = aiSummary ?? event.eventItems[0]?.item.excerpt ?? "";
-  const lenses = parseLensesBlock(aiLenses);
-  const explanationText =
-    aiExplanation ??
-    (limitedCoverage
-      ? "This event is currently summarized based on available reports."
-      : "This page groups multiple reports about the same event to show how different sources emphasize different aspects.");
+  const heroTitle = event.eventItems[0]?.item.title ?? "Event";
+  const heroSummary = event.eventItems[0]?.item.excerpt ?? "";
 
   return (
     <div className="grid gap-4 md:gap-6">
