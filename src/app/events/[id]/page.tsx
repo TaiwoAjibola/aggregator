@@ -195,36 +195,4 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       )}
     </div>
   );
-
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="text-sm font-medium text-zinc-900">Original items</div>
-        <div className="mt-1 text-xs text-zinc-500">Use these to verify what was actually reported.</div>
-        <div className="mt-4 grid gap-3">
-          {event.eventItems.map((ei) => {
-            const it = ei.item;
-            return (
-              <div key={ei.id} className="rounded-xl border border-zinc-200 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-zinc-900">{it.source.name}</div>
-                  <div className="text-xs text-zinc-500">{formatDateTimeShort(it.publishedAt ?? it.fetchedAt)}</div>
-                </div>
-                <div className="mt-2 text-base font-semibold leading-snug text-zinc-900">{it.title}</div>
-                {it.excerpt ? <div className="mt-2 text-sm text-zinc-600 line-clamp-3">{it.excerpt}</div> : null}
-                {it.url ? (
-                  <div className="mt-3 text-sm">
-                    <Link className="text-zinc-900 underline underline-offset-4" href={it.url} target="_blank">
-                      Original link
-                    </Link>
-                  </div>
-                ) : null}
-                {typeof ei.similarity === "number" ? (
-                  <div className="mt-2 text-xs text-zinc-500">Similarity: {ei.similarity.toFixed(2)}</div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-    </div>
-  );
 }
