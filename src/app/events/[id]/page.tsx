@@ -49,10 +49,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   const heroTitle = event.eventItems[0]?.item.title ?? "Event";
   const heroSummary = event.eventItems[0]?.item.excerpt ?? "";
+  
+  // Combine body content from top 3 articles for substantial header information
+  const substantialBody = event.eventItems
+    .slice(0, 3)
+    .map((ei) => ei.item.body || ei.item.excerpt)
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, 600);
 
   return (
     <div className="grid gap-4 md:gap-6">
-      {/* Header Section */}
+      {/*substantialBody && (
+          <p className="mt-3 text-sm md:text-base text-zinc-700 leading-relaxed max-w-3xl">{substantialBody}</p>
+        )}
+        
+        {!substantialBody &&  Header Section */}
       <section className="rounded-lg md:rounded-2xl border border-zinc-200 bg-white p-4 md:p-8 shadow-sm">
         <Link href="/events" className="mb-4 inline-flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-900">
           ← Back to events

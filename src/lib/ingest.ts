@@ -29,6 +29,7 @@ export async function ingestFeed(sourceName: string, rssUrl: string) {
           sourceId: source.id,
           title: item.title,
           excerpt: item.excerpt,
+          body: item.body,
           url: item.url,
           publishedAt: item.publishedAt,
           fetchedAt,

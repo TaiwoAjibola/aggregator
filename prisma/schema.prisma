@@ -25,6 +25,7 @@ model Item {
   source      Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   title       String
   excerpt     String?
+  body        String?
   url         String?
   publishedAt DateTime?
   fetchedAt   DateTime  @default(now())

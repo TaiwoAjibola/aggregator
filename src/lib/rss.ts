@@ -5,6 +5,7 @@ export type ParsedFeedItem = {
   url?: string;
   publishedAt?: Date;
   excerpt?: string;
+  body?: string;
 };
 
 const parser: Parser = new Parser({
@@ -30,6 +31,29 @@ function stripCmsNoise(value: string): string {
     .replace(/\bShare this\b[^.]*\.?/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function pickBody(item: Parser.Item): string | undefined {
+  const anyItem = item as unknown as Record<string, unknown>;
+  const raw =
+    (typeof item.content === "string" ? item.content : undefined) ??
+    (typeof anyItem["content:encoded"] === "string"
+      ? (anyItem["content:encoded"] as string)
+      : undefined) ??
+    (typeof (item as unknown as { description?: unknown }).description === "string"
+      ? ((item as unknown as { description?: string }).description as string)
+      : undefined) ??
+    item.contentSnippet ??
+    (typeof item.summary === "string" ? item.summary : undefined);
+  if (!raw) return undefined;
+  const maxChars = envInt("RSS_BODY_MAX_CHARS", 1200);
+  const cleaned = raw
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const withoutNoise = stripCmsNoise(cleaned);
+  return withoutNoise.slice(0, maxChars);
 }
 
 function pickExcerpt(item: Parser.Item): string | undefined {
@@ -76,6 +100,7 @@ export async function fetchRssItems(rssUrl: string): Promise<ParsedFeedItem[]> {
       url,
       publishedAt,
       excerpt: pickExcerpt(item),
+      body: pickBody(item),
     });
   }
 
