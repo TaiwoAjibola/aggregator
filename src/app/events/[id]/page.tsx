@@ -74,16 +74,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   {formatDateTimeShort(ei.item.publishedAt ?? ei.item.fetchedAt)}
                 </p>
               </div>
-              {ei.item.url && (
-                <a
-                  href={ei.item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition flex-shrink-0"
-                >
-                  Read →
-                </a>
-              )}
             </div>
           </div>
 
@@ -109,17 +99,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             )}
           </div>
 
-          {/* Article Footer - Source Credit */}
+          {/* Article Footer - Source Credit and Link */}
           <div className="border-t border-zinc-200 bg-zinc-50 p-4 md:p-5">
-            <div className="text-xs text-zinc-600 space-y-1">
+            <div className="text-xs text-zinc-600 space-y-2">
               <p className="font-medium">Source: <span className="font-semibold text-zinc-900">{ei.item.source.name}</span></p>
               {ei.item.url && (
                 <p>
+                  Original article:{" "}
                   <a 
                     href={ei.item.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 hover:underline"
+                    className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
                   >
                     {ei.item.url}
                   </a>
