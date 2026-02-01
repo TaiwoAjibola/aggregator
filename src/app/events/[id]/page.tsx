@@ -84,19 +84,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </h3>
           </div>
 
-          {/* Article Body */}
-          <div className="p-6 md:p-8">
-            {ei.item.body ? (
-              <div className="prose prose-sm max-w-none text-zinc-800 leading-relaxed whitespace-pre-wrap">
-                {ei.item.body}
-              </div>
-            ) : ei.item.excerpt ? (
-              <div className="prose prose-sm max-w-none text-zinc-800 leading-relaxed">
-                {ei.item.excerpt}
-              </div>
-            ) : (
-              <p className="text-zinc-600 italic">No content available for this article.</p>
-            )}
+          {/* Article Body - Full Content Only */}
+          <div className="p-6 md:p-8 text-base md:text-lg text-zinc-800 leading-relaxed whitespace-pre-wrap">
+            {ei.item.body || "No content available for this article."}
           </div>
 
           {/* Article Footer - Source Credit and Link */}
