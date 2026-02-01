@@ -84,9 +84,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </h3>
           </div>
 
-          {/* Article Body - Full Content Only */}
+          {/* Article Body - Full Content or Excerpt */}
           <div className="p-6 md:p-8 text-base md:text-lg text-zinc-800 leading-relaxed whitespace-pre-wrap">
-            {ei.item.body || "No content available for this article."}
+            {ei.item.body && (
+              ei.item.body
+            )}
+            {!ei.item.body && ei.item.excerpt && (
+              <div>
+                <p className="text-sm text-blue-600 mb-3 italic">📝 Excerpt (full article available at source)</p>
+                {ei.item.excerpt}
+              </div>
+            )}
+            {!ei.item.body && !ei.item.excerpt && (
+              <p className="text-zinc-600 italic">No content available for this article.</p>
+            )}
           </div>
 
           {/* Article Footer - Source Credit and Link */}
