@@ -14,10 +14,11 @@ What it does:
 ## Requirements
 
 - Node.js 20+
-- SQLite (via Prisma, no separate install)
+- PostgreSQL (via Prisma - Neon.tech or Supabase for cloud)
 
 Optional (for AI summaries):
-- Ollama running locally
+- **Groq API** (recommended - free tier, ultra-fast) - See [GROQ_SETUP.md](GROQ_SETUP.md)
+- **Ollama** (local fallback)
 
 ## Setup
 
@@ -48,7 +49,16 @@ Option B: add feeds via API
 - POST to `/api/sources` (no UI page):
 	- `{ "name": "Premium Times", "rssUrl": "https://www.premiumtimesng.com/feed" }`
 
-4) (Optional) Configure Ollama
+4) (Optional) Configure Groq API (Recommended)
+
+Set environment variables in `.env`:
+
+- `GROQ_API_KEY` (get free key at https://console.groq.com)
+- `GROQ_MODEL` (default `llama-3.3-70b-versatile`)
+
+See [GROQ_SETUP.md](GROQ_SETUP.md) for detailed setup instructions.
+
+Alternative: Configure Ollama (Local Fallback)
 
 Set environment variables in `.env` (or your shell):
 

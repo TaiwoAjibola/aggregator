@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { buildNeutralAggregationPrompt, PROMPT_VERSION } from "@/lib/prompt";
 import { ollamaGenerate } from "@/lib/ollama";
 import { huggingFaceGenerate } from "@/lib/huggingface";
+import { groqGenerate } from "@/lib/groq";
 
 const DEFAULT_COVERAGE_NOTE =
   "This event is currently reported by a limited number of sources. Coverage may expand as more reports emerge.";
@@ -327,9 +328,49 @@ export async function generateEventSummaryWithOllama(eventId: string) {
   const prompt = buildNeutralAggregationPrompt(inputItems);
 
   let outputText: string;
+  let usedModel = model;
+
+  // Priority: Groq (cloud-free) > HuggingFace > Ollama (local)
+  const groqApiKey = process.env.GROQ_API_KEY;
   const useHuggingFace = process.env.USE_HUGGINGFACE === "1";
 
-  if (useHuggingFace) {
+  if (groqApiKey && !useHuggingFace) {
+    // Try Groq first (recommended for production)
+    try {
+      const groqModel = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+      outputText = await groqGenerate(prompt, {
+        apiKey: groqApiKey,
+        model: groqModel,
+        timeoutMs: envInt("GROQ_TIMEOUT_MS", 30_000),
+      });
+      usedModel = groqModel;
+      console.log(`✓ Generated summary with Groq (${groqModel})`);
+    } catch (groqErr) {
+      const groqMsg = groqErr instanceof Error ? groqErr.message : String(groqErr);
+      console.warn(`Groq failed: ${groqMsg}. Falling back to Ollama...`);
+      
+      // Fallback to Ollama if Groq fails
+      try {
+        outputText = await ollamaGenerate(prompt, {
+          baseUrl,
+          model,
+          timeoutMs: envInt("OLLAMA_TIMEOUT_MS", 60_000),
+          options: {
+            num_ctx: envInt("OLLAMA_NUM_CTX", 1024),
+            num_predict: envInt("OLLAMA_NUM_PREDICT", 350),
+            temperature: envFloat("OLLAMA_TEMPERATURE", 0.2),
+            top_p: envFloat("OLLAMA_TOP_P", 0.9),
+          },
+        });
+        console.log(`✓ Generated summary with Ollama fallback (${model})`);
+      } catch (ollamaErr) {
+        const ollamaMsg = ollamaErr instanceof Error ? ollamaErr.message : String(ollamaErr);
+        throw new Error(
+          `Both Groq and Ollama failed. Groq: ${groqMsg} | Ollama: ${ollamaMsg}`,
+        );
+      }
+    }
+  } else if (useHuggingFace) {
     const hfToken = process.env.HF_API_TOKEN;
     if (!hfToken) {
       throw new Error("USE_HUGGINGFACE=1 but HF_API_TOKEN is not set");
@@ -341,6 +382,8 @@ export async function generateEventSummaryWithOllama(eventId: string) {
         model: hfModel,
         timeoutMs: envInt("HF_TIMEOUT_MS", 120_000),
       });
+      usedModel = hfModel;
+      console.log(`✓ Generated summary with HuggingFace (${hfModel})`);
     } catch (hfErr) {
       const hfMsg = hfErr instanceof Error ? hfErr.message : String(hfErr);
       console.warn(`HF failed: ${hfMsg}. Falling back to Ollama...`);
@@ -358,6 +401,7 @@ export async function generateEventSummaryWithOllama(eventId: string) {
             top_p: envFloat("OLLAMA_TOP_P", 0.9),
           },
         });
+        console.log(`✓ Generated summary with HuggingFace fallback to Ollama (${model})`);
       } catch (ollamaErr) {
         const ollamaMsg = ollamaErr instanceof Error ? ollamaErr.message : String(ollamaErr);
         throw new Error(
@@ -366,6 +410,7 @@ export async function generateEventSummaryWithOllama(eventId: string) {
       }
     }
   } else {
+    // Default: Use Ollama (local)
     try {
       outputText = await ollamaGenerate(prompt, {
         baseUrl,
@@ -378,6 +423,7 @@ export async function generateEventSummaryWithOllama(eventId: string) {
           top_p: envFloat("OLLAMA_TOP_P", 0.9),
         },
       });
+      console.log(`✓ Generated summary with Ollama (${model})`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       throw new Error(
@@ -399,7 +445,7 @@ export async function generateEventSummaryWithOllama(eventId: string) {
   const saved = await db().eventAiOutput.create({
     data: {
       eventId: event.id,
-      model,
+      model: usedModel,
       promptVersion: PROMPT_VERSION,
       outputText,
     },

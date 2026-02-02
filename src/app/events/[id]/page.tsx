@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getEventWithItems } from "@/lib/events";
 import { extractHeader } from "@/lib/textExtraction";
+import ExtractArticleButton from "@/components/ExtractArticleButton";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -93,6 +94,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <div>
                 <p className="text-sm text-blue-600 mb-3 italic">📝 Excerpt (full article available at source)</p>
                 {ei.item.excerpt}
+                {ei.item.url && (
+                  <ExtractArticleButton 
+                    itemId={ei.item.id} 
+                    itemTitle={ei.item.title}
+                    hasBody={false}
+                  />
+                )}
               </div>
             )}
             {!ei.item.body && !ei.item.excerpt && (
