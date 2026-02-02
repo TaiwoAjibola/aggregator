@@ -85,9 +85,38 @@ API actions:
 
 ## CLI (optional)
 
-- `npm run ingest`
-- `npm run group`
-- `npm run generate:event -- <eventId>`
+- `npm run ingest` - Fetch articles from RSS feeds
+- `npm run group` - Group articles into events
+- `npm run generate:event -- <eventId>` - Generate AI summary for specific event
+- `npm run analyze` - Analyze events for breaking news and duplicate sources
+
+## Features
+
+### Core
+- **RSS Ingestion:** Fetches articles from 9 Nigerian news sources
+- **Event Grouping:** Uses Jaccard similarity to cluster related articles (48-hour window)
+- **AI Summaries:** Groq API (fast, cloud-free) with Ollama fallback for neutral event summaries
+- **Full Article Extraction:** On-demand extraction using @extractus/article-extractor
+
+### Advanced
+- **Breaking News Detection:** Automatically identifies breaking news based on:
+  - Number of sources covering the event (3+ sources)
+  - Time urgency (rapid coverage within 1-2 hours)
+  - Total article count (5+ articles)
+  - Breaking score threshold: 50+ points
+- **Duplicate Source Detection:** Uses AI to detect when same source publishes multiple articles about same event
+- **Topic Clustering:** Enhanced extraction of topics/entities from headlines with Nigerian context
+- **Timeline View:** Chronological view of how coverage developed across sources
+
+### UI
+- **Stats Dashboard:** Shows total events, articles, sources, and breaking news count
+- **Smart Badges:** Visual indicators for:
+  - 🔴 Breaking news
+  - ✅ AI summary ready
+  - ⚠️ Limited coverage (< 2 sources)
+  - 🟠 Duplicate source detected
+- **Topic Tags:** Automatically extracted topics displayed as tags
+- **Source Timeline:** Visualize when each source published their coverage
 
 ## Notes
 

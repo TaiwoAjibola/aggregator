@@ -12,6 +12,7 @@
     "ingest": "tsx src/scripts/ingest.ts",
     "group": "tsx src/scripts/group.ts",
     "generate:event": "tsx src/scripts/generate-event.ts",
+    "analyze": "tsx src/scripts/analyze.ts",
     "worker": "tsx src/scripts/worker.ts"
   },
   "dependencies": {

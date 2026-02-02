@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getEventWithItems } from "@/lib/events";
 import { extractHeader } from "@/lib/textExtraction";
+import { extractTopicsFromText } from "@/lib/topics";
 import ExtractArticleButton from "@/components/ExtractArticleButton";
 
 export const runtime = "nodejs";
@@ -49,6 +50,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   const heroTitle = event.eventItems[0]?.item.title ?? "Event";
   const headerTitle = extractHeader(heroTitle);
+  
+  // Extract topics from event
+  const topics = await extractTopicsFromText(headerTitle, false);
+  
+  // Sort items by published date for timeline
+  const sortedItems = [...event.eventItems].sort((a, b) => {
+    const dateA = a.item.publishedAt ?? a.item.fetchedAt;
+    const dateB = b.item.publishedAt ?? b.item.fetchedAt;
+    return dateA.getTime() - dateB.getTime();
+  });
 
   return (
     <div className="grid gap-8 md:gap-10">
@@ -58,12 +69,63 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           ← Back to events
         </Link>
         
+        {event.isBreaking && (
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-red-100 px-4 py-2 text-sm font-bold text-red-800 border-2 border-red-300">
+            🔴 BREAKING NEWS {event.breakingScore ? `(Score: ${Math.round(event.breakingScore)})` : ""}
+          </div>
+        )}
+        
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-900 break-words mt-3 leading-tight">
           {headerTitle}
         </h1>
+        
+        {topics.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {topics.map((topic) => (
+              <span
+                key={topic}
+                className="inline-flex items-center gap-1.5 rounded-full bg-blue-200 px-3 py-1 text-xs font-semibold text-blue-900"
+              >
+                #{topic}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {event.hasDuplicates && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-orange-800 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
+            ⚠️ Multiple articles from same source detected
+          </div>
+        )}
+      </section>
+
+      {/* TIMELINE VIEW */}
+      <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+        <h3 className="text-sm uppercase tracking-widest font-semibold text-zinc-500 mb-4">Coverage Timeline</h3>
+        <div className="space-y-3">
+          {sortedItems.map((ei, index) => {
+            const time = formatDateTimeShort(ei.item.publishedAt ?? ei.item.fetchedAt);
+            return (
+              <div key={ei.id} className="flex gap-4 items-start">
+                <div className="flex flex-col items-center">
+                  <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow"></div>
+                  {index < sortedItems.length - 1 && (
+                    <div className="w-0.5 h-full min-h-[40px] bg-zinc-200"></div>
+                  )}
+                </div>
+                <div className="flex-1 pb-6">
+                  <p className="text-xs text-zinc-500 font-medium mb-1">{time}</p>
+                  <p className="text-sm font-semibold text-zinc-900">{ei.item.source.name}</p>
+                  <p className="text-sm text-zinc-700 mt-1 line-clamp-2">{ei.item.title}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* FULL ARTICLE BODIES WITH ATTRIBUTION */}
+      <h2 className="text-2xl font-bold text-zinc-900">Full Articles</h2>
       {event.eventItems.map((ei, index) => (
         <section key={ei.id} className="rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden">
           {/* Source Header */}

@@ -37,13 +37,16 @@ model Item {
 }
 
 model Event {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  startAt   DateTime?
-  endAt     DateTime?
-  itemCount Int      @default(0)
-  key       String?  @unique
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  startAt        DateTime?
+  endAt          DateTime?
+  itemCount      Int      @default(0)
+  key            String?  @unique
+  isBreaking     Boolean  @default(false)
+  hasDuplicates  Boolean  @default(false)
+  breakingScore  Float?
 
   eventItems EventItem[]
   aiOutputs  EventAiOutput[]

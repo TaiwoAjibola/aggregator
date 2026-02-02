@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import EventsFilters from "@/components/EventsFilters";
+import StatsBar from "@/components/StatsBar";
 import { db } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -168,6 +169,9 @@ export default async function EventsPage({
     topics: string[];
     itemsCount: number;
     sourcesCount: number;
+    isBreaking: boolean;
+    hasDuplicates: boolean;
+    breakingScore: number | null;
   };
 
   const rows: Row[] = [];
@@ -209,6 +213,9 @@ export default async function EventsPage({
       topics,
       itemsCount: e._count.eventItems,
       sourcesCount: sources.length,
+      isBreaking: e.isBreaking,
+      hasDuplicates: e.hasDuplicates,
+      breakingScore: e.breakingScore,
     });
   }
 
@@ -236,6 +243,17 @@ export default async function EventsPage({
       return haystack.includes(query.toLowerCase());
     });
 
+  // Calculate stats
+  const allSources = new Set<string>();
+  let totalItems = 0;
+  let breakingCount = 0;
+  
+  for (const r of rows) {
+    for (const s of r.sources) allSources.add(s);
+    totalItems += r.itemsCount;
+    if (r.isBreaking) breakingCount++;
+  }
+
   return (
     <div className="grid gap-6 md:gap-8">
       <div className="grid gap-4">
@@ -245,6 +263,13 @@ export default async function EventsPage({
             Grouped clusters of similar headlines (48-hour window).
           </p>
         </div>
+
+        <StatsBar 
+          totalEvents={rows.length} 
+          totalItems={totalItems} 
+          uniqueSources={allSources.size}
+          breakingCount={breakingCount}
+        />
 
         <EventsFilters topics={topicsForChips} selectedTopic={selectedTopic} sort={sort} date={selectedDate} q={query} />
       </div>
@@ -259,6 +284,11 @@ export default async function EventsPage({
             >
               <div className="flex flex-col md:flex-row items-start justify-between gap-2 md:gap-4">
                 <div className="min-w-0 flex-1">
+                  {r.isBreaking && (
+                    <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-800 dark:bg-red-500/20 dark:text-red-200">
+                      🔴 BREAKING NEWS
+                    </div>
+                  )}
                   <div className="text-base md:text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-50 line-clamp-2 md:line-clamp-none">
                     {r.title}
                   </div>
@@ -280,6 +310,12 @@ export default async function EventsPage({
                     <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-500/15 dark:text-sky-200">
                       <span className="text-sky-700 dark:text-sky-200">●</span>
                       Limited coverage
+                    </span>
+                  ) : null}
+                  {r.hasDuplicates ? (
+                    <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-800 dark:bg-orange-500/15 dark:text-orange-200">
+                      <span className="text-orange-700 dark:text-orange-200">●</span>
+                      Duplicate source
                     </span>
                   ) : null}
                 </div>
