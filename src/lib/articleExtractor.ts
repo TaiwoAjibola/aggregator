@@ -28,7 +28,6 @@ export async function extractArticleContent(url: string): Promise<ExtractedArtic
 
   try {
     const article = await extract(url, {}, {
-      maxRetries: 2,
       timeout: timeoutMs,
     });
 
