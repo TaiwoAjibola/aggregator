@@ -24,12 +24,8 @@ function envInt(name: string, fallback: number): number {
 export async function extractArticleContent(url: string): Promise<ExtractedArticle | null> {
   if (!url) return null;
 
-  const timeoutMs = envInt("EXTRACTION_TIMEOUT_MS", 15000);
-
   try {
-    const article = await extract(url, {}, {
-      timeout: timeoutMs,
-    });
+    const article = await extract(url);
 
     if (!article) return null;
 
