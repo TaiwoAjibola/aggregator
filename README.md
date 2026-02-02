@@ -83,6 +83,37 @@ API actions:
 - Check feed health: POST `/api/feeds/check`
 - Generate AI summary for an event: button on an event page
 
+## Automation
+
+### Local Worker (Laptop)
+Run the worker script to automatically ingest, group, and analyze news:
+
+```bash
+npm run worker
+```
+
+By default, runs every hour. Configure via environment variables:
+- `WORKER_INTERVAL_MS=1800000` (30 minutes)
+- `WORKER_RUN_ONCE=1` (run once and exit, useful for cron)
+- `WORKER_DISABLE_ANALYZE=0` (enable analysis step)
+
+### Cloud-Free Automation (GitHub Actions)
+For 24/7 automated aggregation without a running laptop:
+
+1. **Push code to GitHub** (already done)
+2. **Add secrets to your GitHub repository:**
+   - Go to Settings → Secrets and variables → Actions
+   - Add `DATABASE_URL` (your Neon.tech connection string)
+   - Add `GROQ_API_KEY` (your Groq API key)
+3. **Enable GitHub Actions:**
+   - Go to Actions tab in your repository
+   - Enable workflows if prompted
+   - The workflow runs automatically every 30 minutes
+
+**Manual trigger:** Go to Actions → "Automated News Aggregation" → Run workflow
+
+**Monitor:** Check Actions tab for run history and logs
+
 ## CLI (optional)
 
 - `npm run ingest` - Fetch articles from RSS feeds

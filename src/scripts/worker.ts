@@ -3,6 +3,7 @@ import "dotenv/config";
 import { FEEDS } from "@/config/feeds";
 import { ingestFeed } from "@/lib/ingest";
 import { groupRecentItemsIntoEvents } from "@/lib/grouping";
+import { analyzeRecentEvents } from "@/lib/detection";
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -30,6 +31,7 @@ async function runOnce() {
   const maxFeeds = envInt("WORKER_MAX_FEEDS", 0);
   const doIngest = process.env.WORKER_DISABLE_INGEST !== "1";
   const doGroup = process.env.WORKER_DISABLE_GROUP !== "1";
+  const doAnalyze = process.env.WORKER_DISABLE_ANALYZE !== "1";
 
   for (const [idx, feed] of FEEDS.entries()) {
     if (maxFeeds > 0 && idx >= maxFeeds) break;
@@ -47,6 +49,10 @@ async function runOnce() {
       })
     : null;
 
+  const analyzed = doAnalyze
+    ? await analyzeRecentEvents(envInt("ANALYZE_EVENT_LIMIT", 50))
+    : null;
+
   console.log(
     JSON.stringify(
       {
@@ -55,6 +61,7 @@ async function runOnce() {
         finishedAt: new Date().toISOString(),
         ingest: results,
         group: grouped,
+        analyze: analyzed,
       },
       null,
       2,

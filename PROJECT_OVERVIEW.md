@@ -240,28 +240,31 @@ Coverage Note: [Metadata about sources and timeframe]
 **Workflow:**
 1. Ingest all RSS feeds sequentially (with delay between feeds)
 2. Group recent items into events
-3. Sleep for configured interval (default: 1 hour)
-4. Repeat
+3. Analyze events for breaking news and duplicate sources
+4. Sleep for configured interval (default: 1 hour)
+5. Repeat
 
-#### Planned: GitHub Actions (Cloud-Free)
-**What it will do:**
-- Scheduled cron workflow (e.g., every hour)
+#### ✅ Implemented: GitHub Actions (Cloud-Free)
+**What it does:**
+- Scheduled cron workflow runs every 30 minutes
 - Runs in GitHub's cloud infrastructure (free for public repos)
 - No laptop required - runs 24/7
 - Environment secrets managed in GitHub
 
 **Workflow:**
-1. GitHub Actions triggers on schedule (cron expression)
+1. GitHub Actions triggers on schedule (`*/30 * * * *`)
 2. Checks out repository code
 3. Sets up Node.js environment
-4. Connects to cloud database (Neon/Supabase)
-5. Runs ingestion script
-6. Runs grouping script
+4. Connects to cloud database (Neon.tech)
+5. Runs worker script (ingest → group → analyze)
+6. Updates breaking news and duplicate flags
 7. Logs results
 
+**Workflow file:** `.github/workflows/aggregate.yml`
+
 **Example cron schedules:**
+- Every 30 minutes: `*/30 * * * *` (current)
 - Every hour: `0 * * * *`
-- Every 30 minutes: `*/30 * * * *`
 - Every 6 hours: `0 */6 * * *`
 
 **Configuration:**
@@ -270,6 +273,12 @@ Coverage Note: [Metadata about sources and timeframe]
 - `WORKER_MAX_FEEDS` (limit feed count, 0 = all)
 - `WORKER_DISABLE_INGEST` (set to "1" to skip ingestion)
 - `WORKER_DISABLE_GROUP` (set to "1" to skip grouping)
+- `WORKER_DISABLE_ANALYZE` (set to "1" to skip analysis)
+- `ANALYZE_EVENT_LIMIT` (default: 50 recent events)
+
+**Required GitHub Secrets:**
+- `DATABASE_URL` - Neon.tech PostgreSQL connection string
+- `GROQ_API_KEY` - Groq API key for AI analysis
 
 ---
 
