@@ -295,17 +295,6 @@ export default async function EventsPage({
                 </div>
 
                 <div className="flex shrink-0 flex-wrap items-center gap-1 md:gap-2">
-                  {r.hasAi ? (
-                    <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
-                      <span className="text-emerald-700 dark:text-emerald-200">●</span>
-                      AI summary ready
-                    </span>
-                  ) : (
-                    <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
-                      <span className="text-amber-700 dark:text-amber-200">●</span>
-                      Needs AI
-                    </span>
-                  )}
                   {r.limitedCoverage ? (
                     <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-500/15 dark:text-sky-200">
                       <span className="text-sky-700 dark:text-sky-200">●</span>

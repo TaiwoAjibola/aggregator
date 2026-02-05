@@ -4,6 +4,7 @@ import { FEEDS } from "@/config/feeds";
 import { ingestFeed } from "@/lib/ingest";
 import { groupRecentItemsIntoEvents } from "@/lib/grouping";
 import { analyzeRecentEvents } from "@/lib/detection";
+import { autoExtractAndSummarize } from "@/lib/autoSummarize";
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -32,6 +33,7 @@ async function runOnce() {
   const doIngest = process.env.WORKER_DISABLE_INGEST !== "1";
   const doGroup = process.env.WORKER_DISABLE_GROUP !== "1";
   const doAnalyze = process.env.WORKER_DISABLE_ANALYZE !== "1";
+  const doSummarize = process.env.WORKER_DISABLE_SUMMARIZE !== "1";
 
   for (const [idx, feed] of FEEDS.entries()) {
     if (maxFeeds > 0 && idx >= maxFeeds) break;
@@ -53,6 +55,14 @@ async function runOnce() {
     ? await analyzeRecentEvents(envInt("ANALYZE_EVENT_LIMIT", 50))
     : null;
 
+  const summarized = doSummarize
+    ? await autoExtractAndSummarize({
+        maxEvents: envInt("SUMMARIZE_EVENT_LIMIT", 20),
+        onlyWithoutSummary: true,
+        extractArticles: process.env.WORKER_DISABLE_EXTRACTION !== "1",
+      })
+    : null;
+
   console.log(
     JSON.stringify(
       {
@@ -62,6 +72,7 @@ async function runOnce() {
         ingest: results,
         group: grouped,
         analyze: analyzed,
+        summarize: summarized,
       },
       null,
       2,

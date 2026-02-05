@@ -13,6 +13,7 @@
     "group": "tsx src/scripts/group.ts",
     "generate:event": "tsx src/scripts/generate-event.ts",
     "analyze": "tsx src/scripts/analyze.ts",
+    "auto-summarize": "tsx src/scripts/auto-summarize.ts",
     "worker": "tsx src/scripts/worker.ts"
   },
   "dependencies": {

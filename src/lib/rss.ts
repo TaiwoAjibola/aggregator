@@ -26,6 +26,8 @@ function stripCmsNoise(value: string): string {
     .replace(/\bThe post\b[^.]*\bappeared first on\b[^.]*\.?/gi, " ")
     .replace(/\bappeared first on\b[^.]*\.?/gi, " ")
     .replace(/\bRead more\b\s*$/gi, " ")
+    .replace(/\bRead More:?\s*https?:\/\/[^\s]+/gi, " ")  // Remove "Read More: [URL]"
+    .replace(/\bRead More:?\s*/gi, " ")  // Remove "Read More:" anywhere
     .replace(/\bContinue reading\b\s*$/gi, " ")
     .replace(/\bSubscribe\b[^.]*\.?/gi, " ")
     .replace(/\bShare this\b[^.]*\.?/gi, " ")
