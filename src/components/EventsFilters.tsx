@@ -96,31 +96,9 @@ export default function EventsFilters({
   return (
     <div className="grid gap-2 md:gap-3">
       <div className="grid gap-2">
-        <div className="grid gap-1">
-          <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Kind</div>
-          <div className="flex flex-wrap items-center gap-1 sm:gap-2 w-full overflow-x-auto pb-2 sm:pb-0">
-          {kinds.map((k) => {
-            const active = k === selectedKind;
-            return (
-              <Link
-                key={k}
-                href={hrefWith({ kind: k })}
-                className={
-                  active
-                    ? "rounded-full border border-zinc-300 bg-white px-2 sm:px-3 py-1 text-xs font-medium text-zinc-900 whitespace-nowrap dark:border-white/15 dark:bg-white/10 dark:text-zinc-100"
-                    : "rounded-full border border-zinc-200 bg-white px-2 sm:px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-300 whitespace-nowrap dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-white/20 dark:hover:bg-white/10"
-                }
-              >
-                {k}
-              </Link>
-            );
-          })}
-          </div>
-        </div>
-
-        <div className="grid gap-1">
-          <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Type</div>
-          <div className="flex flex-wrap items-center gap-1 sm:gap-2 w-full overflow-x-auto pb-2 sm:pb-0">
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-400">Type</span>
+          <div className="flex flex-nowrap items-center gap-1 sm:gap-2 w-full overflow-x-auto py-1">
             {eventTypes.map((t) => {
               const active = t.label === selectedType;
               return (
@@ -128,12 +106,36 @@ export default function EventsFilters({
                   key={t.label}
                   href={hrefWith({ type: t.value })}
                   className={
-                    active
+                    (active
                       ? "rounded-full border border-zinc-300 bg-white px-2 sm:px-3 py-1 text-xs font-medium text-zinc-900 whitespace-nowrap dark:border-white/15 dark:bg-white/10 dark:text-zinc-100"
-                      : "rounded-full border border-zinc-200 bg-white px-2 sm:px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-300 whitespace-nowrap dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-white/20 dark:hover:bg-white/10"
+                      : "rounded-full border border-zinc-200 bg-white px-2 sm:px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-300 whitespace-nowrap dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-white/20 dark:hover:bg-white/10") +
+                    " shrink-0"
                   }
                 >
                   {t.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-400">Kind</span>
+          <div className="flex flex-nowrap items-center gap-1 sm:gap-2 w-full overflow-x-auto py-1">
+            {kinds.map((k) => {
+              const active = k === selectedKind;
+              return (
+                <Link
+                  key={k}
+                  href={hrefWith({ kind: k })}
+                  className={
+                    (active
+                      ? "rounded-full border border-zinc-300 bg-white px-2 sm:px-3 py-1 text-xs font-medium text-zinc-900 whitespace-nowrap dark:border-white/15 dark:bg-white/10 dark:text-zinc-100"
+                      : "rounded-full border border-zinc-200 bg-white px-2 sm:px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-300 whitespace-nowrap dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-white/20 dark:hover:bg-white/10") +
+                    " shrink-0"
+                  }
+                >
+                  {k}
                 </Link>
               );
             })}
