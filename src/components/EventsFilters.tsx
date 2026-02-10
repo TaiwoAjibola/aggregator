@@ -96,9 +96,8 @@ export default function EventsFilters({
   return (
     <div className="grid gap-2 md:gap-3">
       <div className="grid gap-2">
-        <div className="flex items-center gap-2">
-          <span className="shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-400">Type</span>
-          <div className="flex flex-nowrap items-center gap-1 sm:gap-2 w-full overflow-x-auto py-1">
+        <div className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-1 shadow-sm dark:border-white/10 dark:bg-white/4">
+          <div className="flex w-full flex-nowrap items-center gap-1 sm:gap-2 overflow-x-auto py-1">
             {eventTypes.map((t) => {
               const active = t.label === selectedType;
               return (
@@ -119,9 +118,8 @@ export default function EventsFilters({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-400">Kind</span>
-          <div className="flex flex-nowrap items-center gap-1 sm:gap-2 w-full overflow-x-auto py-1">
+        <div className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-1 shadow-sm dark:border-white/10 dark:bg-white/4">
+          <div className="flex w-full flex-nowrap items-center gap-1 sm:gap-2 overflow-x-auto py-1">
             {kinds.map((k) => {
               const active = k === selectedKind;
               return (
@@ -142,9 +140,9 @@ export default function EventsFilters({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-3">
-          <div className="flex flex-col xs:flex-row xs:flex-wrap items-start xs:items-center gap-1 xs:gap-2 w-full sm:w-auto">
-            <span className="text-xs text-zinc-600 dark:text-zinc-400 hidden xs:inline">Sort</span>
+        <div className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 shadow-sm dark:border-white/10 dark:bg-white/4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-3">
+            <div className="flex flex-col xs:flex-row xs:flex-wrap items-start xs:items-center gap-1 xs:gap-2 w-full sm:w-auto">
             <Link
               href={hrefWith({ sort: "recent" })}
               className={
@@ -167,7 +165,6 @@ export default function EventsFilters({
             </Link>
 
             <div className="flex items-center gap-1 xs:gap-2">
-              <span className="text-xs text-zinc-600 dark:text-zinc-400 hidden xs:inline">Date</span>
               <input
                 type="date"
                 value={date ?? ""}
@@ -177,7 +174,6 @@ export default function EventsFilters({
             </div>
 
             <div className="flex items-center gap-1 xs:gap-2 w-full xs:w-auto">
-              <span className="text-xs text-zinc-600 dark:text-zinc-400 hidden xs:inline">Search</span>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -195,6 +191,7 @@ export default function EventsFilters({
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
 
