@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 
 import EventsFilters from "@/components/EventsFilters";
 import StatsBar from "@/components/StatsBar";
@@ -8,11 +9,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type EventsSearchParams = {
+  // Back-compat: `topic` was the old name for `kind`.
   topic?: string;
+  kind?: string;
+  type?: "politics" | "economics" | "business" | "other";
   sort?: "recent" | "oldest";
   date?: string;
   q?: string;
 };
+
+type EventType = "Politics" | "Economics" | "Business" | "Other";
 
 function parseAiField(
   outputText: string,
@@ -126,6 +132,87 @@ function parseYyyyMmDd(value: string | undefined): { dayStartUtc: number; dayEnd
   return { dayStartUtc, dayEndUtc };
 }
 
+function inferEventType(input: { title: string; summary: string; topics: string[] }): EventType {
+  const text = `${input.title}\n${input.summary}\n${input.topics.join(" ")}`.toLowerCase();
+
+  const score = (needles: string[]) => needles.reduce((acc, n) => (text.includes(n) ? acc + 1 : acc), 0);
+
+  const politics = score([
+    "election",
+    "inec",
+    "apc",
+    "pdp",
+    "lp",
+    "nnpp",
+    "senate",
+    "national assembly",
+    "house of representatives",
+    "governor",
+    "president",
+    "minister",
+    "policy",
+    "bill",
+    "committee",
+    "campaign",
+    "primaries",
+  ]);
+
+  const economics = score([
+    "inflation",
+    "cpi",
+    "gdp",
+    "recession",
+    "economy",
+    "economic",
+    "naira",
+    "forex",
+    "fx",
+    "exchange rate",
+    "interest rate",
+    "cbn",
+    "budget",
+    "debt",
+    "imf",
+    "world bank",
+    "tariff",
+    "trade",
+    "oil price",
+    "crude",
+  ]);
+
+  const business = score([
+    "business",
+    "company",
+    "firm",
+    "bank",
+    "investor",
+    "investors",
+    "market",
+    "stock",
+    "shares",
+    "earnings",
+    "profit",
+    "revenue",
+    "ceo",
+    "acquisition",
+    "merger",
+    "ipo",
+    "startup",
+    "dangote",
+    "nse",
+    "ngx",
+  ]);
+
+  const best: Array<[EventType, number]> = [
+    ["Politics", politics],
+    ["Economics", economics],
+    ["Business", business],
+  ];
+
+  const top = best.reduce((acc, cur) => (cur[1] > acc[1] ? cur : acc), ["Other" as EventType, 0]);
+  return top[1] > 0 ? top[0] : "Other";
+}
+
 export default async function EventsPage({
   searchParams,
 }: {
@@ -133,25 +220,116 @@ export default async function EventsPage({
 }) {
   try {
     const params = await searchParams;
-    const selectedTopic = (params?.topic ?? "All").trim() || "All";
+    const selectedKind = (params?.kind ?? params?.topic ?? "All").trim() || "All";
+    const selectedTypeParam = (params?.type ?? "").trim();
+    const selectedType: EventType | "All" =
+      selectedTypeParam === "politics"
+        ? "Politics"
+        : selectedTypeParam === "economics"
+          ? "Economics"
+          : selectedTypeParam === "business"
+            ? "Business"
+            : selectedTypeParam === "other"
+              ? "Other"
+              : "All";
     const sort = params?.sort === "oldest" ? "oldest" : "recent";
     const selectedDate = (params?.date ?? "").trim() || "";
     const query = (params?.q ?? "").trim();
     const selectedDay = parseYyyyMmDd(selectedDate);
 
+    const where = (() => {
+      const and: Prisma.EventWhereInput[] = [];
+
+      if (selectedDay) {
+        const { dayStartUtc, dayEndUtc } = selectedDay;
+        const dayStart = new Date(dayStartUtc);
+        const dayEnd = new Date(dayEndUtc);
+
+        // Match the page's fallback window logic:
+        // windowStart = startAt ?? createdAt
+        // windowEnd = endAt ?? updatedAt
+        and.push({
+          OR: [
+            {
+              AND: [
+                { startAt: { not: null } },
+                { endAt: { not: null } },
+                { startAt: { lte: dayEnd } },
+                { endAt: { gte: dayStart } },
+              ],
+            },
+            {
+              AND: [
+                { startAt: { not: null } },
+                { endAt: null },
+                { startAt: { lte: dayEnd } },
+                { updatedAt: { gte: dayStart } },
+              ],
+            },
+            {
+              AND: [
+                { startAt: null },
+                { endAt: { not: null } },
+                { createdAt: { lte: dayEnd } },
+                { endAt: { gte: dayStart } },
+              ],
+            },
+            {
+              AND: [
+                { startAt: null },
+                { endAt: null },
+                { createdAt: { lte: dayEnd } },
+                { updatedAt: { gte: dayStart } },
+              ],
+            },
+          ],
+        });
+      }
+
+      if (query) {
+        and.push({
+          OR: [
+            {
+              aiOutputs: {
+                some: {
+                  outputText: { contains: query, mode: "insensitive" },
+                },
+              },
+            },
+            {
+              eventItems: {
+                some: {
+                  item: {
+                    OR: [
+                      { title: { contains: query, mode: "insensitive" } },
+                      { excerpt: { contains: query, mode: "insensitive" } },
+                      { source: { name: { contains: query, mode: "insensitive" } } },
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+        });
+      }
+
+      return and.length ? ({ AND: and } satisfies Prisma.EventWhereInput) : undefined;
+    })();
+
     const events = await db().event.findMany({
-    orderBy: { updatedAt: sort === "oldest" ? "asc" : "desc" },
-    take: 100,
-    include: {
-      _count: { select: { eventItems: true, aiOutputs: true } },
-      aiOutputs: { orderBy: { createdAt: "desc" }, take: 1 },
-      eventItems: {
-        orderBy: { createdAt: "asc" },
-        take: 8,
-        include: { item: { include: { source: true } } },
+      where,
+      orderBy: { updatedAt: sort === "oldest" ? "asc" : "desc" },
+      take: 100,
+      include: {
+        _count: { select: { eventItems: true, aiOutputs: true } },
+        aiOutputs: { orderBy: { createdAt: "desc" }, take: 1 },
+        eventItems: {
+          orderBy: { createdAt: "asc" },
+          take: 8,
+          include: { item: { include: { source: true } } },
+        },
       },
-    },
-  });
+    });
 
   const topicCounts = new Map<string, number>();
   const eventTopicsById = new Map<string, string[]>();
@@ -172,6 +350,7 @@ export default async function EventsPage({
     isBreaking: boolean;
     hasDuplicates: boolean;
     breakingScore: number | null;
+    eventType: EventType;
   };
 
   const rows: Row[] = [];
@@ -192,6 +371,7 @@ export default async function EventsPage({
     const start = e.startAt ?? e.createdAt;
     const end = e.endAt ?? e.updatedAt;
     const topics = extractTopicsFromTitle(titleFromAi ?? fallbackTitle);
+    const eventType = inferEventType({ title, summary, topics });
 
     eventTopicsById.set(e.id, topics);
     for (const t of topics) topicCounts.set(t, (topicCounts.get(t) ?? 0) + 1);
@@ -216,6 +396,7 @@ export default async function EventsPage({
       isBreaking: e.isBreaking,
       hasDuplicates: e.hasDuplicates,
       breakingScore: e.breakingScore,
+      eventType,
     });
   }
 
@@ -224,24 +405,22 @@ export default async function EventsPage({
     .map(([t]) => t)
     .slice(0, 10);
 
-  const topicsForChips = ["All", ...dynamicTopics];
-  if (selectedTopic !== "All" && !topicsForChips.includes(selectedTopic)) {
-    topicsForChips.splice(1, 0, selectedTopic);
+  const kindsForChips = ["All", ...dynamicTopics];
+  if (selectedKind !== "All" && !kindsForChips.includes(selectedKind)) {
+    kindsForChips.splice(1, 0, selectedKind);
   }
 
+  const typeChips: Array<{ label: EventType | "All"; value: "" | "politics" | "economics" | "business" | "other" }> = [
+    { label: "All", value: "" },
+    { label: "Politics", value: "politics" },
+    { label: "Economics", value: "economics" },
+    { label: "Business", value: "business" },
+    { label: "Other", value: "other" },
+  ];
+
   const filteredRows = rows
-    .filter((r) => (selectedTopic === "All" ? true : r.topics.includes(selectedTopic)))
-    .filter((r) => {
-      if (!selectedDay) return true;
-      const startMs = r.start.getTime();
-      const endMs = r.end.getTime();
-      return startMs <= selectedDay.dayEndUtc && endMs >= selectedDay.dayStartUtc;
-    })
-    .filter((r) => {
-      if (!query) return true;
-      const haystack = `${r.title}\n${r.summary}\n${r.sources.join(" ")}`.toLowerCase();
-      return haystack.includes(query.toLowerCase());
-    });
+    .filter((r) => (selectedKind === "All" ? true : r.topics.includes(selectedKind)))
+    .filter((r) => (selectedType === "All" ? true : r.eventType === selectedType));
 
   // Calculate stats
   const allSources = new Set<string>();
@@ -271,7 +450,15 @@ export default async function EventsPage({
           breakingCount={breakingCount}
         />
 
-        <EventsFilters topics={topicsForChips} selectedTopic={selectedTopic} sort={sort} date={selectedDate} q={query} />
+        <EventsFilters
+          kinds={kindsForChips}
+          selectedKind={selectedKind}
+          eventTypes={typeChips}
+          selectedType={selectedType}
+          sort={sort}
+          date={selectedDate}
+          q={query}
+        />
       </div>
 
       <div className="grid gap-3 md:gap-4">
